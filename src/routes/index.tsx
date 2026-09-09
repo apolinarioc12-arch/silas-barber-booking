@@ -69,16 +69,32 @@ function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const days = useMemo(() => {
-    const list: Date[] = [];
+  const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      list.push(d);
-    }
-    return list;
-  }, []);
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startWeekDay = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < startWeekDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+    return days;
+  }, [currentMonth]);
+
+  const monthLabel = useMemo(
+    () =>
+      currentMonth.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric",
+      }),
+    [currentMonth]
+  );
 
   const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
 
