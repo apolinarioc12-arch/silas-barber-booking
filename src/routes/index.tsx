@@ -23,7 +23,7 @@ import {
   SHOP,
   type Service,
 } from "@/lib/barbershop";
-import logo from "@/assets/logo.png";
+import logoAsset from "@/assets/logo-barbearia-silas.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
