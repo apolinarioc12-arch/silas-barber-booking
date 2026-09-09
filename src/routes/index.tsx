@@ -322,30 +322,62 @@ function BookingPage() {
 
         {/* STEP: data */}
         {step === "data" && (
-          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5">
-            {days.map((d) => {
-              const open = OPENING_HOURS[d.getDay()] !== null;
-              return (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-base font-extrabold capitalize">
+                {monthLabel}
+              </h2>
+              <div className="flex gap-1">
                 <button
-                  key={d.toISOString()}
-                  disabled={!open}
-                  onClick={() => pickDate(d)}
-                  className={`flex flex-col items-center rounded-xl border px-2 py-3 transition-all ${
-                    open
-                      ? "border-border bg-card hover:border-primary"
-                      : "cursor-not-allowed border-border/40 opacity-30"
-                  }`}
+                  onClick={() => changeMonth(-1)}
+                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
-                  <span className="text-[11px] uppercase text-muted-foreground">
-                    {WEEKDAYS_SHORT[d.getDay()]}
-                  </span>
-                  <span className="font-display text-xl font-extrabold">{d.getDate()}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
-                  </span>
+                  <ChevronLeft className="size-4" />
                 </button>
-              );
-            })}
+                <button
+                  onClick={() => changeMonth(1)}
+                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-2 grid grid-cols-7 gap-1">
+              {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
+                <div
+                  key={w}
+                  className="text-center text-[11px] font-bold uppercase text-muted-foreground"
+                >
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((d, i) => {
+                if (!d) return <div key={`empty-${i}`} className="aspect-square" />;
+                const open = OPENING_HOURS[d.getDay()] !== null;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isPast = d < today;
+                const disabled = !open || isPast;
+                return (
+                  <button
+                    key={d.toISOString()}
+                    disabled={disabled}
+                    onClick={() => pickDate(d)}
+                    className={`aspect-square rounded-lg font-display text-sm font-bold transition-all ${
+                      disabled
+                        ? "cursor-not-allowed opacity-20"
+                        : "hover:border-primary hover:text-primary"
+                    } ${open && !isPast ? "border border-border bg-background" : ""}`}
+                  >
+                    {d.getDate()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
