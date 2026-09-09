@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Clock,
   ChevronLeft,
+  ChevronRight,
   Check,
   MapPin,
   Phone,
