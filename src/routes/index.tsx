@@ -159,7 +159,13 @@ function BookingPage() {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo Barbearia Silas" width={44} height={44} className="rounded-full" />
+            <img
+              src={logoAsset.url}
+              alt="Logo Barbearia Silas"
+              width={48}
+              height={48}
+              className="size-12 object-contain"
+            />
             <div>
               <p className="font-display text-lg font-extrabold leading-tight">{SHOP.name}</p>
               <p className="text-xs text-muted-foreground">Diadema · SP</p>
