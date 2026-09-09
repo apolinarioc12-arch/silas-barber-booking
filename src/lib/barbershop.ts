@@ -29,8 +29,8 @@ export const OPENING_HOURS: Record<number, { open: string; close: string } | nul
 export function slotsForDate(date: Date): string[] {
   const hours = OPENING_HOURS[date.getDay()];
   if (!hours) return [];
-  const [openH, openM] = hours.open.split(":").map(Number);
-  const [closeH, closeM] = hours.close.split(":").map(Number);
+  const [openH = 0, openM = 0] = hours.open.split(":").map(Number);
+  const [closeH = 0, closeM = 0] = hours.close.split(":").map(Number);
   const slots: string[] = [];
   let t = openH * 60 + openM;
   const end = closeH * 60 + closeM;

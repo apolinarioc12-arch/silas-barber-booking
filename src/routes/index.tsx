@@ -194,7 +194,7 @@ function BookingPage() {
 
             {stepIndex > 0 && (
               <button
-                onClick={() => goTo(STEPS[stepIndex - 1])}
+                onClick={() => goTo(STEPS[stepIndex - 1] ?? "servico")}
                 className="mb-4 flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ChevronLeft className="size-4" /> Voltar
@@ -319,7 +319,7 @@ function BookingPage() {
                   const past =
                     isToday &&
                     (() => {
-                      const [h, m] = t.split(":").map(Number);
+                      const [h = 0, m = 0] = t.split(":").map(Number);
                       const slotDate = new Date(date);
                       slotDate.setHours(h, m, 0, 0);
                       return slotDate.getTime() <= now.getTime();
