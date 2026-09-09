@@ -100,6 +100,12 @@ function BookingPage() {
 
   const goTo = (s: Step) => setStep(s);
 
+  const changeMonth = (delta: number) => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1)
+    );
+  };
+
   const pickService = (s: Service) => {
     setService(s);
     goTo("profissional");
