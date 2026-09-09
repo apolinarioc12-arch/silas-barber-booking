@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Clock,
   ChevronLeft,
+  ChevronRight,
   Check,
   MapPin,
   Phone,
@@ -68,20 +69,42 @@ function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const days = useMemo(() => {
-    const list: Date[] = [];
+  const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      list.push(d);
-    }
-    return list;
-  }, []);
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startWeekDay = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < startWeekDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+    return days;
+  }, [currentMonth]);
+
+  const monthLabel = useMemo(
+    () =>
+      currentMonth.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric",
+      }),
+    [currentMonth]
+  );
 
   const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
 
   const goTo = (s: Step) => setStep(s);
+
+  const changeMonth = (delta: number) => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1)
+    );
+  };
 
   const pickService = (s: Service) => {
     setService(s);
@@ -238,22 +261,41 @@ function BookingPage() {
 
         {/* STEP: serviço */}
         {step === "servico" && (
-          <div className="grid gap-3">
-            {SERVICES.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => pickService(s)}
-                className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
-              >
-                <div>
-                  <p className="font-display text-base font-bold">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">~{s.durationMin} min</p>
-                </div>
-                <p className="font-display text-lg font-extrabold text-primary">
-                  R$ {s.price}
+          <div className="grid gap-5">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/10 p-6">
+              <div className="relative z-10">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
+                  Barbearia Silas
                 </p>
-              </button>
-            ))}
+                <h2 className="mb-2 font-display text-2xl font-extrabold leading-tight">
+                  Bem-vindo!
+                </h2>
+                <p className="max-w-[16rem] text-sm text-muted-foreground">
+                  Agende seu corte, barba ou combo em poucos toques. Estamos te
+                  esperando em Diadema.
+                </p>
+              </div>
+              <div className="pointer-events-none absolute -right-6 -top-6 size-40 rounded-full bg-primary/10 blur-2xl" />
+              <div className="pointer-events-none absolute -bottom-8 right-12 size-32 rounded-full bg-primary/5 blur-xl" />
+            </div>
+
+            <div className="grid gap-3">
+              {SERVICES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => pickService(s)}
+                  className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
+                >
+                  <div>
+                    <p className="font-display text-base font-bold">{s.name}</p>
+                    <p className="text-xs text-muted-foreground">~{s.durationMin} min</p>
+                  </div>
+                  <p className="font-display text-lg font-extrabold text-primary">
+                    R$ {s.price}
+                  </p>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -280,30 +322,62 @@ function BookingPage() {
 
         {/* STEP: data */}
         {step === "data" && (
-          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5">
-            {days.map((d) => {
-              const open = OPENING_HOURS[d.getDay()] !== null;
-              return (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-base font-extrabold capitalize">
+                {monthLabel}
+              </h2>
+              <div className="flex gap-1">
                 <button
-                  key={d.toISOString()}
-                  disabled={!open}
-                  onClick={() => pickDate(d)}
-                  className={`flex flex-col items-center rounded-xl border px-2 py-3 transition-all ${
-                    open
-                      ? "border-border bg-card hover:border-primary"
-                      : "cursor-not-allowed border-border/40 opacity-30"
-                  }`}
+                  onClick={() => changeMonth(-1)}
+                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
-                  <span className="text-[11px] uppercase text-muted-foreground">
-                    {WEEKDAYS_SHORT[d.getDay()]}
-                  </span>
-                  <span className="font-display text-xl font-extrabold">{d.getDate()}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}
-                  </span>
+                  <ChevronLeft className="size-4" />
                 </button>
-              );
-            })}
+                <button
+                  onClick={() => changeMonth(1)}
+                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-2 grid grid-cols-7 gap-1">
+              {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
+                <div
+                  key={w}
+                  className="text-center text-[11px] font-bold uppercase text-muted-foreground"
+                >
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((d, i) => {
+                if (!d) return <div key={`empty-${i}`} className="aspect-square" />;
+                const open = OPENING_HOURS[d.getDay()] !== null;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isPast = d < today;
+                const disabled = !open || isPast;
+                return (
+                  <button
+                    key={d.toISOString()}
+                    disabled={disabled}
+                    onClick={() => pickDate(d)}
+                    className={`aspect-square rounded-lg font-display text-sm font-bold transition-all ${
+                      disabled
+                        ? "cursor-not-allowed opacity-20"
+                        : "hover:border-primary hover:text-primary"
+                    } ${open && !isPast ? "border border-border bg-background" : ""}`}
+                  >
+                    {d.getDate()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
