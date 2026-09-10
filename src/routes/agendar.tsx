@@ -26,7 +26,7 @@ import {
 } from "@/lib/barbershop";
 import logoAsset from "@/assets/logo-barbearia-silas.png.asset.json";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/agendar")({
   head: () => ({
     meta: [
       { title: "Barbearia Silas — Agendamento Online" },
