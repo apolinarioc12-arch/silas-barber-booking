@@ -261,41 +261,22 @@ function BookingPage() {
 
         {/* STEP: serviço */}
         {step === "servico" && (
-          <div className="grid gap-5">
-            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/10 p-6">
-              <div className="relative z-10">
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
-                  Barbearia Silas
+          <div className="grid gap-3">
+            {SERVICES.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => pickService(s)}
+                className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
+              >
+                <div>
+                  <p className="font-display text-base font-bold">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">~{s.durationMin} min</p>
+                </div>
+                <p className="font-display text-lg font-extrabold text-primary">
+                  R$ {s.price}
                 </p>
-                <h2 className="mb-2 font-display text-2xl font-extrabold leading-tight">
-                  Bem-vindo!
-                </h2>
-                <p className="max-w-[16rem] text-sm text-muted-foreground">
-                  Agende seu corte, barba ou combo em poucos toques. Estamos te
-                  esperando em Diadema.
-                </p>
-              </div>
-              <div className="pointer-events-none absolute -right-6 -top-6 size-40 rounded-full bg-primary/10 blur-2xl" />
-              <div className="pointer-events-none absolute -bottom-8 right-12 size-32 rounded-full bg-primary/5 blur-xl" />
-            </div>
-
-            <div className="grid gap-3">
-              {SERVICES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => pickService(s)}
-                  className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
-                >
-                  <div>
-                    <p className="font-display text-base font-bold">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">~{s.durationMin} min</p>
-                  </div>
-                  <p className="font-display text-lg font-extrabold text-primary">
-                    R$ {s.price}
-                  </p>
-                </button>
-              ))}
-            </div>
+              </button>
+            ))}
           </div>
         )}
 
