@@ -1,187 +1,49 @@
-import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  Scissors,
-  User,
-  CalendarDays,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  MapPin,
-  Phone,
-  Loader2,
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  SERVICES,
-  PROFESSIONALS,
-  OPENING_HOURS,
-  slotsForDate,
-  formatDateISO,
-  WEEKDAYS_SHORT,
-  WEEKDAYS_FULL,
-  SHOP,
-  type Service,
-} from "@/lib/barbershop";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Phone, MapPin, Clock, Scissors, CalendarCheck, Star } from "lucide-react";
+import { SHOP, SERVICES, OPENING_HOURS } from "@/lib/barbershop";
 import logoAsset from "@/assets/logo-barbearia-silas.png.asset.json";
+import bannerAsset from "@/assets/banner-home.webp.asset.json";
+import gallery1Asset from "@/assets/gallery-1.jpg.asset.json";
+import gallery2Asset from "@/assets/gallery-2.jpg.asset.json";
+import gallery3Asset from "@/assets/gallery-3.jpg.asset.json";
+import gallery4Asset from "@/assets/gallery-4.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Barbearia Silas — Agendamento Online" },
+      { title: "Barbearia Silas — Barbearia em Diadema" },
       {
         name: "description",
         content:
-          "Agende seu corte ou barba na Barbearia Silas em Diadema. Escolha o serviço, o profissional, o dia e o horário.",
+          "Barbearia Silas em Diadema. Cortes modernos, barba alinhada e atendimento que faz a diferença. Agende seu horário online.",
       },
-      { property: "og:title", content: "Barbearia Silas — Agendamento Online" },
+      { property: "og:title", content: "Barbearia Silas — Barbearia em Diadema" },
       {
         property: "og:description",
-        content: "Agende seu corte ou barba na Barbearia Silas em Diadema. Rápido e direto.",
+        content:
+          "Cortes modernos, barba alinhada e atendimento que faz a diferença. Agende online na Barbearia Silas.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: BookingPage,
+  component: HomePage,
 });
 
-type Step = "servico" | "profissional" | "data" | "horario" | "dados" | "confirmado";
-const STEPS: Step[] = ["servico", "profissional", "data", "horario", "dados"];
+const GALLERY = [
+  { src: gallery1Asset.url, alt: "Corte moderno na Barbearia Silas" },
+  { src: gallery2Asset.url, alt: "Barba alinhada na Barbearia Silas" },
+  { src: gallery3Asset.url, alt: "Fade com estilo na Barbearia Silas" },
+  { src: gallery4Asset.url, alt: "Atendimento na Barbearia Silas" },
+];
 
-const STEP_TITLES: Record<Exclude<Step, "confirmado">, string> = {
-  servico: "Escolha o serviço",
-  profissional: "Escolha o profissional",
-  data: "Escolha o dia",
-  horario: "Escolha o horário",
-  dados: "Seus dados",
-};
-
-function BookingPage() {
-  const [step, setStep] = useState<Step>("servico");
-  const [service, setService] = useState<Service | null>(null);
-  const [professional, setProfessional] = useState<string | null>(null);
-  const [date, setDate] = useState<Date | null>(null);
-  const [time, setTime] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [takenSlots, setTakenSlots] = useState<string[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-
-  const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startWeekDay = firstDay.getDay();
-    const daysInMonth = lastDay.getDate();
-    const days: (Date | null)[] = [];
-    for (let i = 0; i < startWeekDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
-    return days;
-  }, [currentMonth]);
-
-  const monthLabel = useMemo(
-    () =>
-      currentMonth.toLocaleDateString("pt-BR", {
-        month: "long",
-        year: "numeric",
-      }),
-    [currentMonth]
-  );
-
-  const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
-
-  const goTo = (s: Step) => setStep(s);
-
-  const changeMonth = (delta: number) => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1)
-    );
-  };
-
-  const pickService = (s: Service) => {
-    setService(s);
-    goTo("profissional");
-  };
-
-  const pickProfessional = (p: string) => {
-    setProfessional(p);
-    setTime(null);
-    goTo("data");
-  };
-
-  const pickDate = async (d: Date) => {
-    setDate(d);
-    setTime(null);
-    goTo("horario");
-    setLoadingSlots(true);
-    const { data } = await supabase.rpc("get_booked_slots", { p_date: formatDateISO(d) });
-    const taken = (data ?? [])
-      .filter((r: { professional: string; booking_time: string }) => r.professional === professional)
-      .map((r: { booking_time: string }) => r.booking_time.slice(0, 5));
-    setTakenSlots(taken);
-    setLoadingSlots(false);
-  };
-
-  const pickTime = (t: string) => {
-    setTime(t);
-    goTo("dados");
-  };
-
-  const submit = async () => {
-    if (!service || !professional || !date || !time || !name.trim() || !phone.trim()) return;
-    setSubmitting(true);
-    setError(null);
-    const { error: err } = await supabase.from("bookings").insert({
-      service: service.name,
-      professional,
-      booking_date: formatDateISO(date),
-      booking_time: time,
-      client_name: name.trim(),
-      client_phone: phone.trim(),
-    });
-    setSubmitting(false);
-    if (err) {
-      if (err.code === "23505") {
-        setError("Esse horário acabou de ser reservado. Escolha outro horário.");
-        goTo("horario");
-        if (date) pickDate(date);
-      } else {
-        setError("Não foi possível concluir o agendamento. Tente novamente.");
-      }
-      return;
-    }
-    goTo("confirmado");
-  };
-
-  const reset = () => {
-    setService(null);
-    setProfessional(null);
-    setDate(null);
-    setTime(null);
-    setName("");
-    setPhone("");
-    setError(null);
-    goTo("servico");
-  };
-
-  const slots = date ? slotsForDate(date) : [];
-  const now = new Date();
-  const isToday = date ? formatDateISO(date) === formatDateISO(now) : false;
-
+function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+          <Link to="/" className="flex items-center gap-3">
             <img
               src={logoAsset.url}
               alt="Logo Barbearia Silas"
@@ -193,351 +55,222 @@ function BookingPage() {
               <p className="font-display text-lg font-extrabold leading-tight">{SHOP.name}</p>
               <p className="text-xs text-muted-foreground">Diadema · SP</p>
             </div>
+          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={`https://wa.me/${SHOP.whatsapp}`}
+              target="_blank"
+              rel="noreferrer"
+              className="hidden items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary sm:flex"
+            >
+              <Phone className="size-3.5" />
+              {SHOP.phone}
+            </a>
+            <Link
+              to="/agendar"
+              className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <CalendarCheck className="size-3.5" />
+              Agendar
+            </Link>
           </div>
-          <a
-            href={`https://wa.me/${SHOP.whatsapp}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-          >
-            <Phone className="size-3.5" />
-            {SHOP.phone}
-          </a>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pb-16 pt-6">
-        {step !== "confirmado" && (
-          <>
-            {/* Progress */}
-            <div className="mb-6 flex gap-1.5">
-              {STEPS.map((s, i) => (
-                <div
-                  key={s}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i <= stepIndex ? "bg-primary" : "bg-secondary"
-                  }`}
-                />
-              ))}
+      <main>
+        {/* Banner / Hero */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+            <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card">
+              <img
+                src={bannerAsset.url}
+                alt="Banner Barbearia Silas - Estilo, Confiança e Atitude"
+                width={1200}
+                height={600}
+                className="w-full object-cover"
+                style={{ aspectRatio: "1200/600" }}
+              />
             </div>
-
-            {stepIndex > 0 && (
-              <button
-                onClick={() => goTo(STEPS[stepIndex - 1] ?? "servico")}
-                className="mb-4 flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            <div className="mt-6 text-center sm:mt-8">
+              <Link
+                to="/agendar"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-display text-sm font-extrabold text-primary-foreground transition-opacity hover:opacity-90"
               >
-                <ChevronLeft className="size-4" /> Voltar
-              </button>
-            )}
-
-            <h1 className="mb-1 font-display text-2xl font-extrabold tracking-tight">
-              {STEP_TITLES[step as Exclude<Step, "confirmado">]}
-            </h1>
-
-            {/* Summary chips */}
-            <div className="mb-6 flex flex-wrap gap-2">
-              {service && step !== "servico" && (
-                <Chip icon={<Scissors className="size-3" />} label={service.name} />
-              )}
-              {professional && stepIndex > 1 && (
-                <Chip icon={<User className="size-3" />} label={professional} />
-              )}
-              {date && stepIndex > 2 && (
-                <Chip
-                  icon={<CalendarDays className="size-3" />}
-                  label={`${WEEKDAYS_SHORT[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`}
-                />
-              )}
-              {time && stepIndex > 3 && <Chip icon={<Clock className="size-3" />} label={time} />}
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
-            {error}
-          </div>
-        )}
-
-        {/* STEP: serviço */}
-        {step === "servico" && (
-          <div className="grid gap-5">
-            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/10 p-6">
-              <div className="relative z-10">
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-primary">
-                  Barbearia Silas
-                </p>
-                <h2 className="mb-2 font-display text-2xl font-extrabold leading-tight">
-                  Bem-vindo!
-                </h2>
-                <p className="max-w-[16rem] text-sm text-muted-foreground">
-                  Agende seu corte, barba ou combo em poucos toques. Estamos te
-                  esperando em Diadema.
-                </p>
-              </div>
-              <div className="pointer-events-none absolute -right-6 -top-6 size-40 rounded-full bg-primary/10 blur-2xl" />
-              <div className="pointer-events-none absolute -bottom-8 right-12 size-32 rounded-full bg-primary/5 blur-xl" />
-            </div>
-
-            <div className="grid gap-3">
-              {SERVICES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => pickService(s)}
-                  className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
-                >
-                  <div>
-                    <p className="font-display text-base font-bold">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">~{s.durationMin} min</p>
-                  </div>
-                  <p className="font-display text-lg font-extrabold text-primary">
-                    R$ {s.price}
-                  </p>
-                </button>
-              ))}
+                <CalendarCheck className="size-4" />
+                Faça seu agendamento
+              </Link>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* STEP: profissional */}
-        {step === "profissional" && (
-          <div className="grid gap-3">
-            {PROFESSIONALS.map((p) => (
-              <button
-                key={p}
-                onClick={() => pickProfessional(p)}
-                className="flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 text-left transition-all hover:border-primary"
-              >
-                <div className="flex size-11 items-center justify-center rounded-full bg-secondary font-display text-lg font-extrabold text-primary">
-                  {p[0]}
-                </div>
-                <div>
-                  <p className="font-display text-base font-bold">{p}</p>
-                  <p className="text-xs text-muted-foreground">Barbeiro</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* STEP: data */}
-        {step === "data" && (
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-base font-extrabold capitalize">
-                {monthLabel}
+        {/* Welcome / About */}
+        <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+          <div className="grid gap-8 sm:grid-cols-2 sm:items-center">
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
+                Bem-vindo
+              </p>
+              <h2 className="mb-4 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+                A Barbearia Silas é o seu lugar
               </h2>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => changeMonth(-1)}
-                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button
-                  onClick={() => changeMonth(1)}
-                  className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
+              <p className="mb-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                Aqui a gente cuida do seu visual do jeito certo. Seja um corte descontraído, uma
+                barba desenhada ou o combo completo, nossa equipe está pronta para te atender com
+                profissionalismo e estilo.
+              </p>
+              <ul className="grid gap-3">
+                <li className="flex items-center gap-3 text-sm">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Scissors className="size-4" />
+                  </span>
+                  Cortes e barbas feitos por quem entende do assunto
+                </li>
+                <li className="flex items-center gap-3 text-sm">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Star className="size-4" />
+                  </span>
+                  Ambiente acolhedor e atendimento personalizado
+                </li>
+                <li className="flex items-center gap-3 text-sm">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <CalendarCheck className="size-4" />
+                  </span>
+                  Agendamento online rápido e sem complicação
+                </li>
+              </ul>
             </div>
-
-            <div className="mb-2 grid grid-cols-7 gap-1">
-              {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => (
-                <div
-                  key={w}
-                  className="text-center text-[11px] font-bold uppercase text-muted-foreground"
-                >
-                  {w}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-1">
-              {calendarDays.map((d, i) => {
-                if (!d) return <div key={`empty-${i}`} className="aspect-square" />;
-                const open = OPENING_HOURS[d.getDay()] !== null;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const isPast = d < today;
-                const disabled = !open || isPast;
-                return (
-                  <button
-                    key={d.toISOString()}
-                    disabled={disabled}
-                    onClick={() => pickDate(d)}
-                    className={`aspect-square rounded-lg font-display text-sm font-bold transition-all ${
-                      disabled
-                        ? "cursor-not-allowed opacity-20"
-                        : "hover:border-primary hover:text-primary"
-                    } ${open && !isPast ? "border border-border bg-background" : ""}`}
-                  >
-                    {d.getDate()}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* STEP: horário */}
-        {step === "horario" && date && (
-          <>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {WEEKDAYS_FULL[date.getDay()]}, {date.getDate()} de{" "}
-              {date.toLocaleDateString("pt-BR", { month: "long" })} · com {professional}
-            </p>
-            {loadingSlots ? (
-              <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
-                <Loader2 className="size-5 animate-spin" /> Verificando horários...
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-                {slots.map((t) => {
-                  const taken = takenSlots.includes(t);
-                  const past =
-                    isToday &&
-                    (() => {
-                      const [h = 0, m = 0] = t.split(":").map(Number);
-                      const slotDate = new Date(date);
-                      slotDate.setHours(h, m, 0, 0);
-                      return slotDate.getTime() <= now.getTime();
-                    })();
-                  const disabled = taken || past;
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <h3 className="mb-4 font-display text-lg font-extrabold">Horário de funcionamento</h3>
+              <div className="space-y-2 text-sm">
+                {Object.entries(OPENING_HOURS).map(([day, hours]) => {
+                  const labels = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                  const label = labels[Number(day)];
                   return (
-                    <button
-                      key={t}
-                      disabled={disabled}
-                      onClick={() => pickTime(t)}
-                      className={`rounded-lg border py-2.5 font-display text-sm font-bold transition-all ${
-                        disabled
-                          ? "cursor-not-allowed border-border/40 text-muted-foreground/40 line-through"
-                          : "border-border bg-card hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      {t}
-                    </button>
+                    <div key={day} className="flex justify-between">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className={hours ? "font-medium" : "text-muted-foreground/60"}>
+                        {hours ? `${hours.open} às ${hours.close}` : "Fechado"}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
-            )}
-          </>
-        )}
-
-        {/* STEP: dados */}
-        {step === "dados" && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-            className="grid gap-4"
-          >
-            <div>
-              <label htmlFor="name" className="mb-1.5 block text-sm font-medium">
-                Seu nome
-              </label>
-              <input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Ex.: João Silva"
-                className="w-full rounded-lg border border-input bg-card px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-            <div>
-              <label htmlFor="phone" className="mb-1.5 block text-sm font-medium">
-                WhatsApp / telefone
-              </label>
-              <input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                type="tel"
-                placeholder="(11) 99999-9999"
-                className="w-full rounded-lg border border-input bg-card px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-4 text-sm">
-              <p className="mb-2 font-display font-bold">Resumo</p>
-              <div className="grid gap-1 text-muted-foreground">
-                <p>
-                  {service?.name} · R$ {service?.price}
-                </p>
-                <p>
-                  {professional} · {date && `${WEEKDAYS_FULL[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}`} às {time}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting || !name.trim() || !phone.trim()}
-              className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="size-5 animate-spin" /> Confirmando...
-                </>
-              ) : (
-                "Confirmar agendamento"
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* CONFIRMADO */}
-        {step === "confirmado" && (
-          <div className="pt-6 text-center">
-            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-primary">
-              <Check className="size-8 text-primary-foreground" strokeWidth={3} />
-            </div>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Agendado!</h1>
-            <p className="mt-2 text-muted-foreground">
-              {name.trim().split(" ")[0]}, te esperamos no dia{" "}
-              <span className="font-semibold text-foreground">
-                {date && `${WEEKDAYS_FULL[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}`} às {time}
-              </span>{" "}
-              para {service?.name.toLowerCase()} com {professional}.
-            </p>
-            <div className="mt-8 grid gap-3">
-              <button
-                onClick={reset}
-                className="rounded-xl border border-primary py-3.5 font-display font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-              >
-                Fazer outro agendamento
-              </button>
             </div>
           </div>
-        )}
+        </section>
+
+        {/* Services */}
+        <section className="border-y border-border bg-card/50">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+            <div className="mb-8 text-center">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">Serviços</p>
+              <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+                O que fazemos por você
+              </h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {SERVICES.map((s) => (
+                <div
+                  key={s.id}
+                  className="rounded-xl border border-border bg-background p-5 transition-colors hover:border-primary"
+                >
+                  <p className="mb-1 font-display text-base font-bold">{s.name}</p>
+                  <p className="mb-3 text-xs text-muted-foreground">~{s.durationMin} min</p>
+                  <p className="font-display text-2xl font-extrabold text-primary">R$ {s.price}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                to="/agendar"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-display text-sm font-extrabold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <CalendarCheck className="size-4" />
+                Agende agora
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Gallery */}
+        <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+          <div className="mb-8 text-center">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">Galeria</p>
+            <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Alguns dos nossos trabalhos
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {GALLERY.map((img, i) => (
+              <div
+                key={i}
+                className="group overflow-hidden rounded-xl border border-border bg-card"
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  width={600}
+                  height={600}
+                  loading="lazy"
+                  className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Map */}
+        <section className="border-t border-border bg-card/50">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+            <div className="mb-6 text-center">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
+                Onde estamos
+              </p>
+              <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+                Venha nos visitar
+              </h2>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-border">
+              <iframe
+                title="Localização da Barbearia Silas"
+                src="https://maps.google.com/maps?q=Barbearia+Silas,+Rua+Bituva,+240,+Eldorado,+Diadema,+SP,+09971-070&output=embed"
+                width="100%"
+                height={360}
+                className="border-0"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+            <div className="mt-4 flex flex-col items-center gap-1 text-center text-sm text-muted-foreground">
+              <p className="flex items-center gap-2">
+                <MapPin className="size-4 text-primary" />
+                {SHOP.address}
+              </p>
+              <p className="flex items-center gap-2">
+                <Clock className="size-4 text-primary" />
+                {SHOP.hoursText}
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border">
-        <div className="mx-auto grid max-w-lg gap-3 px-4 py-6 text-sm text-muted-foreground">
-          <p className="flex items-start gap-2">
-            <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-            {SHOP.address}
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} {SHOP.name}. Todos os direitos reservados.
           </p>
-          <p className="flex items-start gap-2">
-            <Clock className="mt-0.5 size-4 shrink-0 text-primary" />
-            {SHOP.hoursText}
-          </p>
+          <Link
+            to="/agendar"
+            className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 font-display text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            <CalendarCheck className="size-4" />
+            Agendar horário
+          </Link>
         </div>
       </footer>
     </div>
-  );
-}
-
-function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <span className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-      {icon}
-      {label}
-    </span>
   );
 }
