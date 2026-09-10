@@ -79,9 +79,9 @@ function HomePage() {
 
       <main>
         {/* Banner / Hero */}
-        <section className="relative overflow-hidden border-b border-border">
+        <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
-            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card">
+            <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card">
               <img
                 src={bannerAsset.url}
                 alt="Banner Barbearia Silas - Estilo, Confiança e Atitude"
@@ -90,28 +90,15 @@ function HomePage() {
                 className="w-full object-cover"
                 style={{ aspectRatio: "1200/600" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
-                <div className="max-w-xl">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    + que um corte, uma experiência
-                  </p>
-                  <h1 className="mb-3 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-                    Estilo, confiança e atitude
-                  </h1>
-                  <p className="mb-6 max-w-md text-sm text-muted-foreground sm:text-base">
-                    Cortes modernos, barba alinhada e aquele atendimento que faz a diferença em
-                    Diadema.
-                  </p>
-                  <Link
-                    to="/agendar"
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-display text-sm font-extrabold text-primary-foreground transition-opacity hover:opacity-90"
-                  >
-                    <CalendarCheck className="size-4" />
-                    Faça seu agendamento
-                  </Link>
-                </div>
-              </div>
+            </div>
+            <div className="mt-6 text-center sm:mt-8">
+              <Link
+                to="/agendar"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-display text-sm font-extrabold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <CalendarCheck className="size-4" />
+                Faça seu agendamento
+              </Link>
             </div>
           </div>
         </section>
