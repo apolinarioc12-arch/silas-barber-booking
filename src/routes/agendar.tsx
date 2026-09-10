@@ -29,13 +29,13 @@ import logoAsset from "@/assets/logo-barbearia-silas.png.asset.json";
 export const Route = createFileRoute("/agendar")({
   head: () => ({
     meta: [
-      { title: "Barbearia Silas — Agendamento Online" },
+      { title: "Agendar — Barbearia Silas" },
       {
         name: "description",
         content:
           "Agende seu corte ou barba na Barbearia Silas em Diadema. Escolha o serviço, o profissional, o dia e o horário.",
       },
-      { property: "og:title", content: "Barbearia Silas — Agendamento Online" },
+      { property: "og:title", content: "Agendar — Barbearia Silas" },
       {
         property: "og:description",
         content: "Agende seu corte ou barba na Barbearia Silas em Diadema. Rápido e direto.",
