@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { addMyBooking, formatDateBR } from "@/lib/my-bookings";
 import {
   Scissors,
   User,
@@ -161,6 +162,16 @@ function BookingPage() {
       }
       return;
     }
+    addMyBooking({
+      service: service.name,
+      price: service.price,
+      professional,
+      date: formatDateISO(date),
+      time,
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+    });
     goTo("confirmado");
   };
 
@@ -171,6 +182,7 @@ function BookingPage() {
     setTime(null);
     setName("");
     setPhone("");
+    setEmail("");
     setError(null);
     goTo("servico");
   };
