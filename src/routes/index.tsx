@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Phone, MapPin, Clock, Scissors, CalendarCheck, Star } from "lucide-react";
+import { Phone, MapPin, Clock, Scissors, CalendarCheck, CalendarDays, Star } from "lucide-react";
 import { SHOP, SERVICES, OPENING_HOURS } from "@/lib/barbershop";
 import logoAsset from "@/assets/logo-barbearia-silas.png.asset.json";
 import bannerAsset from "@/assets/banner-home.webp.asset.json";
@@ -66,6 +66,14 @@ function HomePage() {
               <Phone className="size-3.5" />
               {SHOP.phone}
             </a>
+            <Link
+              to="/meus-agendamentos"
+              className="flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <CalendarDays className="size-3.5" />
+              <span className="hidden sm:inline">Meus agendamentos</span>
+              <span className="sm:hidden">Meus</span>
+            </Link>
             <Link
               to="/agendar"
               className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground transition-opacity hover:opacity-90"

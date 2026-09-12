@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Check,
   MapPin,
-  Phone,
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -559,5 +558,14 @@ function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
       {icon}
       {label}
     </span>
+  );
+}
+
+function SummaryLine({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex flex-wrap gap-1.5">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium">{value}</span>
+    </p>
   );
 }
