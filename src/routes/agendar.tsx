@@ -196,7 +196,7 @@ function BookingPage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img
               src={logoAsset.url}
               alt="Logo Barbearia Silas"
@@ -208,16 +208,14 @@ function BookingPage() {
               <p className="font-display text-lg font-extrabold leading-tight">{SHOP.name}</p>
               <p className="text-xs text-muted-foreground">Diadema · SP</p>
             </div>
-          </div>
-          <a
-            href={`https://wa.me/${SHOP.whatsapp}`}
-            target="_blank"
-            rel="noreferrer"
+          </Link>
+          <Link
+            to="/meus-agendamentos"
             className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           >
-            <Phone className="size-3.5" />
-            {SHOP.phone}
-          </a>
+            <CalendarDays className="size-3.5" />
+            Meus agendamentos
+          </Link>
         </div>
       </header>
 
