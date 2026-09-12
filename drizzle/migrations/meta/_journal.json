@@ -8,6 +8,13 @@
       "when": 1788913320896,
       "tag": "0000_create_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789231736043,
+      "tag": "0001_add_client_email_to_bookings",
+      "breakpoints": true
     }
   ]
 }
