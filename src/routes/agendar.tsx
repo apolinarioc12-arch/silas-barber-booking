@@ -521,6 +521,12 @@ function BookingPage() {
               para {service?.name.toLowerCase()} com {professional}.
             </p>
             <div className="mt-8 grid gap-3">
+              <Link
+                to="/meus-agendamentos"
+                className="rounded-xl bg-primary py-3.5 text-center font-display font-bold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Ver meus agendamentos
+              </Link>
               <button
                 onClick={reset}
                 className="rounded-xl border border-primary py-3.5 font-display font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
