@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { addMyBooking, formatDateBR } from "@/lib/my-bookings";
 import {
   Scissors,
   User,
@@ -9,7 +10,6 @@ import {
   ChevronRight,
   Check,
   MapPin,
-  Phone,
   Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +64,7 @@ function BookingPage() {
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -136,7 +137,8 @@ function BookingPage() {
   };
 
   const submit = async () => {
-    if (!service || !professional || !date || !time || !name.trim() || !phone.trim()) return;
+    if (!service || !professional || !date || !time || !name.trim() || !phone.trim() || !email.trim())
+      return;
     setSubmitting(true);
     setError(null);
     const { error: err } = await supabase.from("bookings").insert({
@@ -146,6 +148,7 @@ function BookingPage() {
       booking_time: time,
       client_name: name.trim(),
       client_phone: phone.trim(),
+      client_email: email.trim(),
     });
     setSubmitting(false);
     if (err) {
@@ -158,6 +161,16 @@ function BookingPage() {
       }
       return;
     }
+    addMyBooking({
+      service: service.name,
+      price: service.price,
+      professional,
+      date: formatDateISO(date),
+      time,
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+    });
     goTo("confirmado");
   };
 
@@ -168,6 +181,7 @@ function BookingPage() {
     setTime(null);
     setName("");
     setPhone("");
+    setEmail("");
     setError(null);
     goTo("servico");
   };
@@ -181,7 +195,7 @@ function BookingPage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <img
               src={logoAsset.url}
               alt="Logo Barbearia Silas"
@@ -193,16 +207,14 @@ function BookingPage() {
               <p className="font-display text-lg font-extrabold leading-tight">{SHOP.name}</p>
               <p className="text-xs text-muted-foreground">Diadema · SP</p>
             </div>
-          </div>
-          <a
-            href={`https://wa.me/${SHOP.whatsapp}`}
-            target="_blank"
-            rel="noreferrer"
+          </Link>
+          <Link
+            to="/meus-agendamentos"
             className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           >
-            <Phone className="size-3.5" />
-            {SHOP.phone}
-          </a>
+            <CalendarDays className="size-3.5" />
+            Meus agendamentos
+          </Link>
         </div>
       </header>
 
@@ -443,21 +455,41 @@ function BookingPage() {
               />
             </div>
 
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+                E-mail
+              </label>
+              <input
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                type="email"
+                placeholder="voce@email.com"
+                className="w-full rounded-lg border border-input bg-card px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              />
+            </div>
+
             <div className="rounded-xl border border-border bg-card p-4 text-sm">
-              <p className="mb-2 font-display font-bold">Resumo</p>
-              <div className="grid gap-1 text-muted-foreground">
-                <p>
-                  {service?.name} · R$ {service?.price}
-                </p>
-                <p>
-                  {professional} · {date && `${WEEKDAYS_FULL[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}`} às {time}
-                </p>
+              <p className="mb-3 font-display font-bold">Resumo do agendamento</p>
+              <div className="grid gap-2">
+                <SummaryLine label="Serviço" value={`${service?.name} · R$ ${service?.price}`} />
+                <SummaryLine label="Barbeiro" value={professional ?? ""} />
+                <SummaryLine
+                  label="Data"
+                  value={
+                    date
+                      ? `${formatDateBR(formatDateISO(date))} - ${WEEKDAYS_FULL[date.getDay()]}`
+                      : ""
+                  }
+                />
+                <SummaryLine label="Horário" value={time ?? ""} />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={submitting || !name.trim() || !phone.trim()}
+              disabled={submitting || !name.trim() || !phone.trim() || !email.trim()}
               className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {submitting ? (
@@ -486,6 +518,12 @@ function BookingPage() {
               para {service?.name.toLowerCase()} com {professional}.
             </p>
             <div className="mt-8 grid gap-3">
+              <Link
+                to="/meus-agendamentos"
+                className="rounded-xl bg-primary py-3.5 text-center font-display font-bold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Ver meus agendamentos
+              </Link>
               <button
                 onClick={reset}
                 className="rounded-xl border border-primary py-3.5 font-display font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
@@ -520,5 +558,14 @@ function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
       {icon}
       {label}
     </span>
+  );
+}
+
+function SummaryLine({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex flex-wrap gap-1.5">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium">{value}</span>
+    </p>
   );
 }

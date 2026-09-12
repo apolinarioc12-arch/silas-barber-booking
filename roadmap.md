@@ -7,3 +7,4 @@
 - [x] Calendário mensal na escolha do dia (dias fechados desabilitados/opacos)
 - [x] Página inicial (/): banner oficial, boas-vindas, galeria, CTA agendamento, mapa
 - [x] Mover fluxo de agendamento para /agendar
+- [x] Resumo em linhas, campo e-mail e aba "Meus agendamentos"
