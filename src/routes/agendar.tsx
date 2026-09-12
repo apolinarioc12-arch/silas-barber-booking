@@ -458,21 +458,41 @@ function BookingPage() {
               />
             </div>
 
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+                E-mail
+              </label>
+              <input
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                type="email"
+                placeholder="voce@email.com"
+                className="w-full rounded-lg border border-input bg-card px-4 py-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              />
+            </div>
+
             <div className="rounded-xl border border-border bg-card p-4 text-sm">
-              <p className="mb-2 font-display font-bold">Resumo</p>
-              <div className="grid gap-1 text-muted-foreground">
-                <p>
-                  {service?.name} · R$ {service?.price}
-                </p>
-                <p>
-                  {professional} · {date && `${WEEKDAYS_FULL[date.getDay()]}, ${date.getDate()}/${date.getMonth() + 1}`} às {time}
-                </p>
+              <p className="mb-3 font-display font-bold">Resumo do agendamento</p>
+              <div className="grid gap-2">
+                <SummaryLine label="Serviço" value={`${service?.name} · R$ ${service?.price}`} />
+                <SummaryLine label="Barbeiro" value={professional ?? ""} />
+                <SummaryLine
+                  label="Data"
+                  value={
+                    date
+                      ? `${formatDateBR(formatDateISO(date))} - ${WEEKDAYS_FULL[date.getDay()]}`
+                      : ""
+                  }
+                />
+                <SummaryLine label="Horário" value={time ?? ""} />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={submitting || !name.trim() || !phone.trim()}
+              disabled={submitting || !name.trim() || !phone.trim() || !email.trim()}
               className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               {submitting ? (
