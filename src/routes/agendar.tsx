@@ -64,6 +64,7 @@ function BookingPage() {
   const [time, setTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [takenSlots, setTakenSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -136,7 +137,8 @@ function BookingPage() {
   };
 
   const submit = async () => {
-    if (!service || !professional || !date || !time || !name.trim() || !phone.trim()) return;
+    if (!service || !professional || !date || !time || !name.trim() || !phone.trim() || !email.trim())
+      return;
     setSubmitting(true);
     setError(null);
     const { error: err } = await supabase.from("bookings").insert({
@@ -146,6 +148,7 @@ function BookingPage() {
       booking_time: time,
       client_name: name.trim(),
       client_phone: phone.trim(),
+      client_email: email.trim(),
     });
     setSubmitting(false);
     if (err) {
