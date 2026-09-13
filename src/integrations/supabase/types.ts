@@ -14,8 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      barber_schedules: {
+        Row: {
+          barber_id: string
+          end_time: string
+          id: string
+          lunch_end: string | null
+          lunch_start: string | null
+          start_time: string
+          weekday: number
+          works: boolean
+        }
+        Insert: {
+          barber_id: string
+          end_time?: string
+          id?: string
+          lunch_end?: string | null
+          lunch_start?: string | null
+          start_time?: string
+          weekday: number
+          works?: boolean
+        }
+        Update: {
+          barber_id?: string
+          end_time?: string
+          id?: string
+          lunch_end?: string | null
+          lunch_start?: string | null
+          start_time?: string
+          weekday?: number
+          works?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barber_schedules_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      barbers: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
+          barber_id: string | null
           booking_date: string
           booking_time: string
           client_email: string | null
@@ -25,8 +88,10 @@ export type Database = {
           id: string
           professional: string
           service: string
+          status: string
         }
         Insert: {
+          barber_id?: string | null
           booking_date: string
           booking_time: string
           client_email?: string | null
@@ -36,8 +101,10 @@ export type Database = {
           id?: string
           professional: string
           service: string
+          status?: string
         }
         Update: {
+          barber_id?: string | null
           booking_date?: string
           booking_time?: string
           client_email?: string | null
@@ -47,6 +114,36 @@ export type Database = {
           id?: string
           professional?: string
           service?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -55,6 +152,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_barber_account: {
+        Args: { p_name: string }
+        Returns: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "barbers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_booked_slots: {
         Args: { p_date: string }
         Returns: {
@@ -62,9 +174,16 @@ export type Database = {
           professional: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "barber"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -191,6 +310,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "barber"],
+    },
   },
 } as const
