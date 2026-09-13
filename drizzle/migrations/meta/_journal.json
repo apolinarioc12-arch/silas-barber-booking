@@ -15,6 +15,13 @@
       "when": 1789231736043,
       "tag": "0001_add_client_email_to_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789313326689,
+      "tag": "0002_barber_area",
+      "breakpoints": true
     }
   ]
 }
